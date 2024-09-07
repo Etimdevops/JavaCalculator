@@ -50,6 +50,10 @@
         file_type: file
       register: junit_files
 
+    - name: Display JUnit test files found
+      ansible.builtin.debug:
+        msg: "JUnit test files found: {{ junit_files.files }}"
+
     - name: Ensure local directory for test reports exists
       ansible.builtin.file:
         path: "/tmp/{{ app_name }}/test-reports/"
@@ -59,7 +63,7 @@
       ansible.builtin.fetch:
         src: "{{ item.path }}"
         dest: "/tmp/{{ app_name }}/test-reports/"
-        flat: yes
+        flat: no  # Keep directory structure, adjust if needed
       loop: "{{ junit_files.files }}"
       when: test_result.rc == 0  # Only fetch if tests were successful
 
