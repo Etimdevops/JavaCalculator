@@ -1,67 +1,79 @@
 pipeline {
-    agent { label 'ansible' }
-
+    agent {
+        label 'ansible'
+    }
+    environment {
+        ANSIBLE_INVENTORY = '/home/ec2-user/JavaCalculator/hosts.ini'
+        ANSIBLE_PLAYBOOK_PATH = '/home/ec2-user/JavaCalculator'
+    }
     stages {
-        stage('Checkout Master (Playbooks and Inventory)') {
+        stage('Checkout Code for Build') {
             steps {
-                dir('/home/ec2-user/JavaCalculator') {
-                    // Checkout the master branch to get the playbooks and hosts.ini
-                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'master'
+                script {
+                    // Checkout the dev branch for build
+                    checkout scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: 'dev']],
+                        userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
+                    ]
                 }
             }
         }
-
-        stage('Checkout for Build (dev)') {
+        stage('Build') {
             steps {
-                dir('/home/ec2-user/JavaCalculator') {
-                    // Checkout the dev branch for building the application
-                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'dev', poll: false
+                script {
+                    // Ensure playbooks are from the master branch
+                    dir(ANSIBLE_PLAYBOOK_PATH) {
+                        git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
+                    }
+                    
+                    ansiblePlaybook(
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/01-Build.yml",
+                        inventory: "${ANSIBLE_INVENTORY}",
+                        credentialsId: 'JenkinsAns'
+                    )
                 }
             }
         }
-
-        stage('Build (dev)') {
+        stage('Checkout Code for Test') {
             steps {
-                dir('/home/ec2-user/JavaCalculator') {
-                    // Run the build playbook with inventory from the master branch
-                    ansiblePlaybook credentialsId: 'JenkinsAns', 
-                                    disableHostKeyChecking: true, 
-                                    installation: 'Ansible', 
-                                    inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
-                                    playbook: '/home/ec2-user/JavaCalculator/01-build.yml'
+                script {
+                    // Checkout the qa branch for testing
+                    checkout scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: 'qa']],
+                        userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
+                    ]
                 }
             }
         }
-
-        stage('Checkout for Test (qa)') {
+        stage('Test') {
             steps {
-                dir('/home/ec2-user/JavaCalculator') {
-                    // Checkout the qa branch for running tests
-                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'qa', poll: false
-                }
-            }
-        }
-
-        stage('Run Tests (qa)') {
-            steps {
-                dir('/home/ec2-user/JavaCalculator') {
-                    // Run the test playbook with inventory from the master branch
-                    ansiblePlaybook credentialsId: 'JenkinsAns', 
-                                    disableHostKeyChecking: true, 
-                                    installation: 'Ansible', 
-                                    inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
-                                    playbook: '/home/ec2-user/JavaCalculator/02-test.yml'
+                script {
+                    // Ensure playbooks are from the master branch
+                    dir(ANSIBLE_PLAYBOOK_PATH) {
+                        git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
+                    }
+                    
+                    ansiblePlaybook(
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/02-Test.yml",
+                        inventory: "${ANSIBLE_INVENTORY}",
+                        credentialsId: 'JenkinsAns'
+                    )
                 }
             }
         }
     }
-
     post {
+        always {
+            // Archive test reports
+            archiveArtifacts artifacts: '/tmp/{{ app_name }}/test-reports/**', allowEmptyArchive: true
+        }
         success {
-            echo 'Build and Test stages completed successfully.'
+            echo 'Pipeline completed successfully.'
         }
         failure {
-            echo 'Build or Test stage failed.'
+            echo 'Pipeline failed.'
         }
     }
 }
