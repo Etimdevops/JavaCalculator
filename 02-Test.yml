@@ -1,0 +1,55 @@
+---
+- name: Run JUnit tests with Maven
+  hosts: n1
+  become: yes
+  vars:
+    jenkins_workspace: "/home/ec2-user/JavaCalculator"  # Path to your Java project root
+    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
+    m2_home: "/opt/apache-maven-3.8.8"
+    app_name: "RaviCalculator"  # The application name
+    junit_test_report: "{{ jenkins_workspace }}/target/surefire-reports"  # JUnit test report directory
+  
+  tasks:
+    - name: Ensure Jenkins workspace directory exists
+      ansible.builtin.file:
+        path: "{{ jenkins_workspace }}"
+        state: directory
+
+    - name: Run Maven tests
+      ansible.builtin.shell:
+        cmd: mvn test
+        chdir: "{{ jenkins_workspace }}"
+      environment:
+        JAVA_HOME: "{{ java_home }}"
+        M2_HOME: "{{ m2_home }}"
+        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
+      register: test_result
+
+    - name: Show Maven test result
+      ansible.builtin.debug:
+        msg: |
+          Maven Test Result:
+          {{ test_result.stdout }}
+          Error Output:
+          {{ test_result.stderr }}
+
+    - name: Check if JUnit test report directory exists
+      ansible.builtin.stat:
+        path: "{{ junit_test_report }}"
+      register: report_dir
+
+    - name: Fail if JUnit test report directory does not exist
+      ansible.builtin.fail:
+        msg: "JUnit test report directory not found: {{ junit_test_report }}"
+      when: not report_dir.stat.exists
+
+    - name: Copy JUnit test reports to local machine
+      ansible.builtin.fetch:
+        src: "{{ junit_test_report }}/"
+        dest: "/tmp/{{ app_name }}/test-reports/"
+        flat: no
+      when: test_result.rc == 0  # Only fetch if tests were successful
+
+    - name: Display JUnit test report path
+      ansible.builtin.debug:
+        msg: "JUnit test reports are saved at /tmp/{{ app_name }}/test-reports/"

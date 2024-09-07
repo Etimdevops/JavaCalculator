@@ -1,0 +1,50 @@
+---
+- name: Perform Maven build
+  hosts: n1
+  become: yes
+  vars:
+    jenkins_workspace: "/home/ec2-user/JavaCalculator"
+    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
+    m2_home: "/opt/apache-maven-3.8.8"
+    app_name: "RaviCalculator"  # Update the application name to match pom.xml
+    jar_file_path: "{{ jenkins_workspace }}/target/{{ app_name }}-1.5.jar"
+  
+  tasks:
+    - name: Ensure Jenkins workspace directory exists
+      ansible.builtin.file:
+        path: "{{ jenkins_workspace }}"
+        state: directory
+
+    - name: Run Maven build
+      ansible.builtin.shell:
+        cmd: mvn clean package
+        chdir: "{{ jenkins_workspace }}"
+      environment:
+        JAVA_HOME: "{{ java_home }}"
+        M2_HOME: "{{ m2_home }}"
+        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
+      register: build_result
+
+    - name: Show Maven build result
+      ansible.builtin.debug:
+        msg: |
+          Maven Build Result:
+          {{ build_result.stdout }}
+          Error Output:
+          {{ build_result.stderr }}
+
+    - name: Check if JAR file exists
+      ansible.builtin.stat:
+        path: "{{ jar_file_path }}"
+      register: jar_file_stat
+
+    - name: Fail if JAR file does not exist
+      ansible.builtin.fail:
+        msg: "JAR file not found: {{ jar_file_path }}"
+      when: not jar_file_stat.stat.exists
+
+    - name: Save JAR file path to a file
+      ansible.builtin.copy:
+        content: "{{ jar_file_path }}"
+        dest: /tmp/jar_file_path.txt
+      when: build_result.rc == 0  # Only save if the build was successful
