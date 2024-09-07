@@ -13,7 +13,8 @@ pipeline {
         stage('Checkout for Build (dev)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
-                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'dev'
+                    // Checkout the dev branch for building the application
+                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'dev', poll: false
                 }
             }
         }
@@ -21,10 +22,11 @@ pipeline {
         stage('Build (dev)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
+                    // Run the build playbook with inventory from the master branch
                     ansiblePlaybook credentialsId: 'JenkinsAns', 
                                     disableHostKeyChecking: true, 
                                     installation: 'Ansible', 
-                                    inventory: 'hosts.ini', 
+                                    inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
                                     playbook: '01-build.yml'
                 }
             }
@@ -33,7 +35,8 @@ pipeline {
         stage('Checkout for Test (qa)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
-                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'qa'
+                    // Checkout the qa branch for running tests
+                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'qa', poll: false
                 }
             }
         }
@@ -41,10 +44,11 @@ pipeline {
         stage('Run Tests (qa)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
+                    // Run the test playbook with inventory from the master branch
                     ansiblePlaybook credentialsId: 'JenkinsAns', 
                                     disableHostKeyChecking: true, 
                                     installation: 'Ansible', 
-                                    inventory: 'hosts.ini', 
+                                    inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
                                     playbook: '02-test.yml'
                 }
             }
