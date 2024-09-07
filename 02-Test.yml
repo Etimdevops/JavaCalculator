@@ -43,12 +43,17 @@
         msg: "JUnit test report directory not found: {{ junit_test_report }}"
       when: not report_dir.stat.exists
 
-    - name: Copy JUnit test reports to local machine
+    - name: Find JUnit test report files
       ansible.builtin.find:
         paths: "{{ junit_test_report }}"
         recurse: yes
         file_type: file
       register: junit_files
+
+    - name: Ensure local directory for test reports exists
+      ansible.builtin.file:
+        path: "/tmp/{{ app_name }}/test-reports/"
+        state: directory
 
     - name: Fetch JUnit test reports
       ansible.builtin.fetch:

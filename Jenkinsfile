@@ -5,6 +5,7 @@ pipeline {
     environment {
         ANSIBLE_INVENTORY = '/home/ec2-user/JavaCalculator/hosts.ini'
         ANSIBLE_PLAYBOOK_PATH = '/home/ec2-user/JavaCalculator'
+        APP_NAME = 'RaviCalculator'  // Ensure this variable is set for proper artifact archiving
     }
     stages {
         stage('Checkout Code for Build') {
@@ -67,7 +68,7 @@ pipeline {
     post {
         always {
             // Archive test reports
-            archiveArtifacts artifacts: '/tmp/{{ app_name }}/test-reports/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: "/tmp/${APP_NAME}/test-reports/**", allowEmptyArchive: true
         }
         success {
             echo 'Pipeline completed successfully.'
