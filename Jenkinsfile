@@ -5,7 +5,7 @@ pipeline {
         stage('Checkout Master (Playbooks)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
-                    git url: 'https://github.com/your-repo/JavaCalculator.git', branch: 'master'
+                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'master'
                 }
             }
         }
@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout for Build (dev)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
-                    git url: 'https://github.com/your-repo/JavaCalculator.git', branch: 'dev'
+                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'dev'
                 }
             }
         }
@@ -33,7 +33,7 @@ pipeline {
         stage('Checkout for Test (qa)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
-                    git url: 'https://github.com/your-repo/JavaCalculator.git', branch: 'qa'
+                    git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'qa'
                 }
             }
         }
