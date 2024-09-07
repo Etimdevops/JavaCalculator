@@ -2,6 +2,14 @@ pipeline {
     agent { label 'ansible' }
 
     stages {
+        stage('Checkout Master (Playbooks)') {
+            steps {
+                dir('/home/ec2-user/JavaCalculator') {
+                    git url: 'https://github.com/your-repo/JavaCalculator.git', branch: 'master'
+                }
+            }
+        }
+
         stage('Checkout for Build (dev)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
