@@ -2,9 +2,10 @@ pipeline {
     agent { label 'ansible' }
 
     stages {
-        stage('Checkout Master (Playbooks)') {
+        stage('Checkout Master (Playbooks and Inventory)') {
             steps {
                 dir('/home/ec2-user/JavaCalculator') {
+                    // Checkout the master branch to get the playbooks and hosts.ini
                     git url: 'https://github.com/Etimdevops/JavaCalculator.git', branch: 'master'
                 }
             }
@@ -27,7 +28,7 @@ pipeline {
                                     disableHostKeyChecking: true, 
                                     installation: 'Ansible', 
                                     inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
-                                    playbook: '01-build.yml'
+                                    playbook: '/home/ec2-user/JavaCalculator/01-build.yml'
                 }
             }
         }
@@ -49,7 +50,7 @@ pipeline {
                                     disableHostKeyChecking: true, 
                                     installation: 'Ansible', 
                                     inventory: '/home/ec2-user/JavaCalculator/hosts.ini', 
-                                    playbook: '02-test.yml'
+                                    playbook: '/home/ec2-user/JavaCalculator/02-test.yml'
                 }
             }
         }
