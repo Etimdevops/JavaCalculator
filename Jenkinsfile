@@ -5,13 +5,11 @@ pipeline {
     environment {
         ANSIBLE_INVENTORY = '/home/ec2-user/JavaCalculator/hosts.ini'
         ANSIBLE_PLAYBOOK_PATH = '/home/ec2-user/JavaCalculator'
-        APP_NAME = 'RaviCalculator'  // Ensure this variable is set for proper artifact archiving
     }
     stages {
         stage('Checkout Code for Build') {
             steps {
                 script {
-                    // Checkout the dev branch for build
                     checkout scm: [
                         $class: 'GitSCM',
                         branches: [[name: 'dev']],
@@ -23,7 +21,6 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // Ensure playbooks are from the master branch
                     dir(ANSIBLE_PLAYBOOK_PATH) {
                         git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
                     }
@@ -39,7 +36,6 @@ pipeline {
         stage('Checkout Code for Test') {
             steps {
                 script {
-                    // Checkout the qa branch for testing
                     checkout scm: [
                         $class: 'GitSCM',
                         branches: [[name: 'qa']],
@@ -51,7 +47,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Ensure playbooks are from the master branch
                     dir(ANSIBLE_PLAYBOOK_PATH) {
                         git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
                     }
@@ -67,8 +62,12 @@ pipeline {
     }
     post {
         always {
+            script {
+                // List contents of the test-reports directory for debugging
+                sh 'ls -la /tmp/RaviCalculator/test-reports/'
+            }
             // Archive test reports
-            archiveArtifacts artifacts: "/tmp/${APP_NAME}/test-reports/**", allowEmptyArchive: true
+            archiveArtifacts artifacts: 'RaviCalculator/test-reports/**', allowEmptyArchive: true
         }
         success {
             echo 'Pipeline completed successfully.'
