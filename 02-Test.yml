@@ -56,17 +56,17 @@
 
     - name: Ensure local directory for test reports exists
       ansible.builtin.file:
-        path: "/tmp/{{ app_name }}/test-reports/"
+        path: "/home/ec2-user/workspace/JenkinsAnsible/test-reports/"
         state: directory
 
     - name: Fetch JUnit test reports
       ansible.builtin.fetch:
         src: "{{ item.path }}"
-        dest: "/tmp/{{ app_name }}/test-reports/"
+        dest: "/home/ec2-user/workspace/JenkinsAnsible/test-reports/"
         flat: no  # Keep directory structure, adjust if needed
       loop: "{{ junit_files.files }}"
       when: test_result.rc == 0  # Only fetch if tests were successful
 
     - name: Display JUnit test report path
       ansible.builtin.debug:
-        msg: "JUnit test reports are saved at /tmp/{{ app_name }}/test-reports/"
+        msg: "JUnit test reports are saved at /home/ec2-user/workspace/JenkinsAnsible/test-reports/"
