@@ -63,11 +63,15 @@ pipeline {
     post {
         always {
             script {
+                // Print the current working directory
+                sh 'pwd'
                 // List contents of the test-reports directory for debugging
                 sh 'ls -la /tmp/RaviCalculator/test-reports/'
+                // List the Jenkins workspace directory for verification
+                sh 'ls -la $JENKINS_HOME/workspace/${JOB_NAME}/'
             }
             // Archive test reports
-            archiveArtifacts artifacts: 'RaviCalculator/test-reports/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: '/tmp/RaviCalculator/test-reports/**', allowEmptyArchive: true
         }
         success {
             echo 'Pipeline completed successfully.'
