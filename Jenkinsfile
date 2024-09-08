@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/03-Transfer-JAR.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/03-filetransfer.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
