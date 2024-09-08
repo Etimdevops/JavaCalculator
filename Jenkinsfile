@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/01-build.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/01-Build.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/02-test.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/02-Test.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
@@ -55,7 +55,7 @@ pipeline {
             steps {
                 script {
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/03-transfer-war-path.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/03-Transfer-JAR.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
@@ -66,7 +66,7 @@ pipeline {
             steps {
                 script {
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/04-deploy.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/04-Deploy.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
