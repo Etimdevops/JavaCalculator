@@ -12,7 +12,7 @@ pipeline {
                 script {
                     checkout scm: [
                         $class: 'GitSCM',
-                        branches: [[name: 'master']], // Adjust branch as needed
+                        branches: [[name: 'master']],
                         userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
                     ]
                 }
@@ -34,7 +34,7 @@ pipeline {
                 script {
                     checkout scm: [
                         $class: 'GitSCM',
-                        branches: [[name: 'qa']], // Adjust branch as needed
+                        branches: [[name: 'qa']],
                         userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
                     ]
                 }
@@ -51,14 +51,13 @@ pipeline {
                 }
             }
         }
-        stage('Checkout Code for File Transfer') {
+        stage('Verify Workspace') {
             steps {
                 script {
-                    checkout scm: [
-                        $class: 'GitSCM',
-                        branches: [[name: 'master']], // Adjust branch as needed
-                        userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
-                    ]
+                    sh 'echo "Current workspace directory:"'
+                    sh 'pwd'
+                    sh 'echo "List of files in the workspace:"'
+                    sh 'ls -la /home/ec2-user/JavaCalculator/'
                 }
             }
         }
