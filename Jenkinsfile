@@ -51,6 +51,17 @@ pipeline {
                 }
             }
         }
+        stage('Checkout Code for File Transfer') {
+            steps {
+                script {
+                    checkout scm: [
+                        $class: 'GitSCM',
+                        branches: [[name: 'master']], // Adjust branch as needed
+                        userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
+                    ]
+                }
+            }
+        }
         stage('Transfer JAR') {
             steps {
                 script {
