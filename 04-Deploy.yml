@@ -1,0 +1,80 @@
+---
+- name: Deploy JAR file
+  hosts: n4
+  become: yes
+
+  vars:
+    jenkins_workspace: "/home/ec2-user/JavaCalculator"
+    deployment_dir: "/opt/app"  # Directory where the JAR file will be deployed
+    jar_file_path: "/tmp/jar_file_path.txt"  # Path where the JAR file path is saved
+    jar_file: "{{ lookup('file', jar_file_path) }}"
+    jar_file_name: "{{ jar_file | basename }}"
+
+  tasks:
+    - name: Ensure deployment directory exists
+      ansible.builtin.file:
+        path: "{{ deployment_dir }}"
+        state: directory
+
+    - name: Stop existing application if running (assumes systemd service exists)
+      systemd:
+        name: myapp
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove old JAR file if it exists
+      ansible.builtin.file:
+        path: "{{ deployment_dir }}/{{ jar_file_name }}"
+        state: absent
+
+    - name: Copy JAR file to deployment directory
+      ansible.builtin.copy:
+        src: "{{ jar_file }}"
+        dest: "{{ deployment_dir }}/{{ jar_file_name }}"
+        mode: '0644'
+      when: jar_file != ""
+
+    - name: Create a systemd service file for the application
+      copy:
+        content: |
+          [Unit]
+          Description=Java Application
+          After=network.target
+
+          [Service]
+          User=appuser
+          Group=appgroup
+          WorkingDirectory={{ deployment_dir }}
+          ExecStart=/usr/bin/java -jar {{ deployment_dir }}/{{ jar_file_name }}
+          Restart=always
+          RestartSec=10
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/myapp.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd to apply new service file
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start the application service
+      systemd:
+        name: myapp
+        enabled: yes
+        state: started
+
+    - name: Verify application is running
+      uri:
+        url: http://localhost:8080  # Adjust if your application has a health check endpoint
+        status_code: 200
+      register: app_status
+      retries: 5
+      delay: 15
+      until: app_status.status == 200
+
+    - name: Display deployment status
+      ansible.builtin.debug:
+        msg: "Deployment successful: {{ app_status.status == 200 }}"

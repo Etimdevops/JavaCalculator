@@ -12,7 +12,7 @@ pipeline {
                 script {
                     checkout scm: [
                         $class: 'GitSCM',
-                        branches: [[name: 'dev']],
+                        branches: [[name: 'master']], // Adjust branch as needed
                         userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
                     ]
                 }
@@ -21,12 +21,8 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    dir(ANSIBLE_PLAYBOOK_PATH) {
-                        git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
-                    }
-                    
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/01-Build.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/01-build.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
@@ -38,7 +34,7 @@ pipeline {
                 script {
                     checkout scm: [
                         $class: 'GitSCM',
-                        branches: [[name: 'qa']],
+                        branches: [[name: 'qa']], // Adjust branch as needed
                         userRemoteConfigs: [[url: 'https://github.com/Etimdevops/JavaCalculator.git']]
                     ]
                 }
@@ -47,12 +43,30 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    dir(ANSIBLE_PLAYBOOK_PATH) {
-                        git branch: 'master', url: 'https://github.com/Etimdevops/JavaCalculator.git'
-                    }
-                    
                     ansiblePlaybook(
-                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/02-Test.yml",
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/02-test.yml",
+                        inventory: "${ANSIBLE_INVENTORY}",
+                        credentialsId: 'JenkinsAns'
+                    )
+                }
+            }
+        }
+        stage('Transfer JAR') {
+            steps {
+                script {
+                    ansiblePlaybook(
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/03-transfer-war-path.yml",
+                        inventory: "${ANSIBLE_INVENTORY}",
+                        credentialsId: 'JenkinsAns'
+                    )
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    ansiblePlaybook(
+                        playbook: "${ANSIBLE_PLAYBOOK_PATH}/04-deploy.yml",
                         inventory: "${ANSIBLE_INVENTORY}",
                         credentialsId: 'JenkinsAns'
                     )
@@ -63,11 +77,15 @@ pipeline {
     post {
         always {
             script {
+                // Print the current working directory
+                sh 'pwd'
                 // List contents of the test-reports directory for debugging
                 sh 'ls -la /home/ec2-user/workspace/JenkinsAnsible/test-reports/'
+                // List the Jenkins workspace directory for verification
+                sh 'ls -la /home/ec2-user/workspace/JenkinsAnsible/'
             }
             // Archive test reports
-            archiveArtifacts artifacts: 'workspace/JenkinsAnsible/test-reports/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: '/home/ec2-user/workspace/JenkinsAnsible/test-reports/**', allowEmptyArchive: true
         }
         success {
             echo 'Pipeline completed successfully.'

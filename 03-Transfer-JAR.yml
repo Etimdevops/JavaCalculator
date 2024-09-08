@@ -1,0 +1,16 @@
+---
+- name: Transfer JAR file to deployment server
+  hosts: n1
+  gather_facts: no
+  tasks:
+    - name: Ensure target directory exists on deployment server
+      ansible.builtin.file:
+        path: /opt/tomcat/webapps/
+        state: directory
+      delegate_to: n4
+
+    - name: Transfer JAR file
+      ansible.builtin.copy:
+        src: "{{ jar_file_path }}"
+        dest: /opt/tomcat/webapps/
+      delegate_to: n4
